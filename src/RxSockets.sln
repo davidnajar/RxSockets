@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28010.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSockets", "RxSockets\RxSockets.csproj", "{43004ACE-9450-4A9D-B660-759EEC5E47B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxSocketTestHarness", "RxSocketTestHarness\RxSocketTestHarness.csproj", "{1006C215-D012-445C-8A65-D1A322E4F75A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{43004ACE-9450-4A9D-B660-759EEC5E47B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43004ACE-9450-4A9D-B660-759EEC5E47B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43004ACE-9450-4A9D-B660-759EEC5E47B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1006C215-D012-445C-8A65-D1A322E4F75A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1006C215-D012-445C-8A65-D1A322E4F75A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1006C215-D012-445C-8A65-D1A322E4F75A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1006C215-D012-445C-8A65-D1A322E4F75A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
