@@ -4,3 +4,5 @@ environment:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 before_build:
   - cmd: dotnet restore
+build:
+  project: src/RxSockets.sln
