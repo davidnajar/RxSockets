@@ -7,12 +7,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RxSockets", "RxSockets\RxSo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicDemo", "BasicDemo\BasicDemo.csproj", "{77294E87-67A0-4363-87F0-FC57119BC9FB}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\build\_build.csproj", "{5390F146-C01E-477A-A8DE-4274149ED24F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5390F146-C01E-477A-A8DE-4274149ED24F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5390F146-C01E-477A-A8DE-4274149ED24F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BFDE3B81-A015-457F-A1CC-2104C768CE49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BFDE3B81-A015-457F-A1CC-2104C768CE49}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BFDE3B81-A015-457F-A1CC-2104C768CE49}.Release|Any CPU.ActiveCfg = Release|Any CPU
