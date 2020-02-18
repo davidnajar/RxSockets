@@ -61,6 +61,7 @@ class Build : NukeBuild
     .Executes(() =>
     {
         Logger.Info($"Next version is {GitVersion.AssemblySemVer}");
+        Logger.Info($"Variale NugetApiKey is ${NugetApiKey}");
 
     });
 
@@ -108,12 +109,13 @@ class Build : NukeBuild
  {
      DotNetNuGetPush(_ => _
         .SetTargetPath(OutputDirectory)
+        .SetApiKey(NugetApiKey)
 
 
-     );
+     ) ;
  });
     Target Script  => _ => _
-        .DependsOn(Pack);
+        .DependsOn(Push);
 
 
 
