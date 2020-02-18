@@ -96,6 +96,7 @@ class Build : NukeBuild
          DotNetPack(_ => _
          .SetConfiguration(Configuration)
          .SetNoBuild(true)
+         .SetPackageId("Rx.Sockets")
          .SetVersion(GitVersion.SemVer)
          .SetOutputDirectory(OutputDirectory)
          .SetProject(Project));
