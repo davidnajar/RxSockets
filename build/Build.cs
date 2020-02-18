@@ -107,7 +107,7 @@ class Build : NukeBuild
  .Executes(() =>
  {
      DotNetNuGetPush(_ => _
-        .SetTargetPath(OutputDirectory)
+        .SetTargetPath(OutputDirectory / "*.nupkg")
         .SetApiKey(NugetApiKey)
         .SetSource("https://api.nuget.org/v3/index.json")
 
