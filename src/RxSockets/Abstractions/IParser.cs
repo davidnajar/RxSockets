@@ -1,0 +1,16 @@
+﻿using RxSockets.Models;
+using System.Buffers;
+using System.Threading.Tasks;
+
+namespace RxSockets.Abstractions
+{
+  public interface IParser
+  {
+    bool CanParse(ReadOnlySequence<byte> bytes);
+
+    Task<ParseResult> ProcessAsync(ReadOnlySequence<byte> bytes);
+
+    Task<ReadOnlySequence<byte>> PrepareMessageToBeSent(
+      ReadOnlySequence<byte> bytes);
+  }
+}
