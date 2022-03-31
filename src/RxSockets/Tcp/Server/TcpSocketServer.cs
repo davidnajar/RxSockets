@@ -62,7 +62,9 @@ namespace RxSockets
                 Socket socket = await this._internalSocket.AcceptAsync();
                 IDuplexPipe pipe = StreamConnection.GetDuplex(new NetworkStream(socket), (PipeOptions)null, (string)null);
                 _connectedClients.Add(pipe);
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 Task.Factory.StartNew(async () => await ReadPipeAsync(pipe.Input, cancellationToken));
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
             }
         }
@@ -138,7 +140,7 @@ namespace RxSockets
                     canParse = _parser.CanParse(buffer);
                     if (canParse)
                     {
-                        ParseResult messageParsed = await _parser.ProcessAsync(buffer);
+                        ParseResult messageParsed = await _parser.ParseAsync(buffer);
                         _whenMessageParsed.OnNext(messageParsed.CleanMessage);
                         buffer = buffer.Slice(buffer.GetPosition(1, messageParsed.EndPosition));
 
@@ -162,6 +164,7 @@ namespace RxSockets
                 throw new SocketAlreadyStartedException("socket");
             }
             _internalSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _internalSocket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, true);
             _endpoint = new IPEndPoint(_settings.Ip, _settings.Port);
         }
 

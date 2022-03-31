@@ -7,7 +7,7 @@ namespace RxSockets.Factory
   public class CanSpecifyFormatter : ICanSpecifyFormatter
   {
     private readonly IServiceCollection _collection;
-    private Type _formatterType;
+ 
 
     public CanSpecifyFormatter(IServiceCollection collection)
     {

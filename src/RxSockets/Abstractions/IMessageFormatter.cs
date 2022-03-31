@@ -6,9 +6,9 @@ namespace RxSockets.Abstractions
 {
   public interface IMessageFormatter<T>
   {
-    Task<T> FormatMessageAsync(ReadOnlySequence<byte> buffer);
+    ValueTask<T> FormatMessageAsync(ReadOnlySequence<byte> buffer);
 
-    Task<ReadOnlySequence<byte>> GetBytesAsync(T message);
+    ValueTask<ReadOnlySequence<byte>> GetBytesAsync(T message);
 
     IObservable<T> WhenNewMessage { get; }
   }

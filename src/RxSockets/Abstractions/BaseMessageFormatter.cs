@@ -23,8 +23,8 @@ namespace RxSockets.Abstractions
       _whenMessageReceived = new Subject<TPayload>();
     }
 
-    public abstract Task<TPayload> FormatMessageAsync(ReadOnlySequence<byte> buffer);
+    public abstract ValueTask<TPayload> FormatMessageAsync(ReadOnlySequence<byte> buffer);
 
-    public abstract Task<ReadOnlySequence<byte>> GetBytesAsync(TPayload message);
+    public abstract ValueTask<ReadOnlySequence<byte>> GetBytesAsync(TPayload message);
   }
 }

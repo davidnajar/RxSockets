@@ -7,16 +7,16 @@ namespace RxSockets.Formatters
 {
   public class AsciiFormatter : BaseMessageFormatter<string>
   {
-    public override Task<string> FormatMessageAsync(ReadOnlySequence<byte> buffer)
+    public override ValueTask<string> FormatMessageAsync(ReadOnlySequence<byte> buffer)
     {
       string result = Encoding.ASCII.GetString(buffer.ToArray());
       _whenMessageReceived.OnNext(result);
-      return Task.FromResult(result);
+      return new ValueTask<string>(result);
     }
 
-    public override Task<ReadOnlySequence<byte>> GetBytesAsync(string message)
+    public override ValueTask<ReadOnlySequence<byte>> GetBytesAsync(string message)
     {
-      return Task.FromResult(new ReadOnlySequence<byte>(Encoding.ASCII.GetBytes(message)));
+      return new ValueTask<ReadOnlySequence<byte>>(new ReadOnlySequence<byte>(Encoding.ASCII.GetBytes(message)));
     }
   }
 }

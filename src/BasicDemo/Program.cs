@@ -1,9 +1,12 @@
-﻿using System;
-using System.Net;
-using RxSockets;
+﻿using RxSockets;
 using RxSockets.Formatters;
 using RxSockets.Parsers.MessageParser;
-using RxSockets.Parsers;
+using RxSockets.Tcp.Client;
+using System;
+using System.Diagnostics;
+using System.Net;
+using System.Reactive.Linq;
+using System.Threading.Tasks;
 
 namespace BasicDemo
 {
@@ -11,7 +14,7 @@ namespace BasicDemo
     {
         static void Main(string[] args)
         {
-            var socket = RxSocketFactory.CreateSocket()
+            var socket = RxSocketBuilder.CreateSocket()
                 .WithSocketType<TcpSocketServer>(new TcpSocketServerSettings()
                 {
                     Ip = IPAddress.Any,
@@ -20,8 +23,8 @@ namespace BasicDemo
                 })
                 .WithParser<MessageParser>(new MessageParserSettings()
                 {
-                    EndDelimiter= new[] { (byte)(03), (byte)(13) },
-                    StartDelimiter =new[] { (byte)(02) }
+                    EndDelimiter = new[] { (byte)(03), (byte)(13) },
+                    StartDelimiter = new[] { (byte)(02) }
                 })
                 .WithFormatter<string, AsciiFormatter>()
                 .Build();
@@ -29,13 +32,57 @@ namespace BasicDemo
             socket.WhenMessageReceived.Subscribe(message =>
             {
 
-                Console.WriteLine(message);
+                Console.WriteLine($"Server < {message}");
             });
-            socket.Start();
+            //  socket.Start();
 
+            var client = RxSocketBuilder.CreateSocket()
+              .WithSocketType<TcpSocketClient>(new TcpSocketClientSettings()
+              {
+                  Ip = IPAddress.Loopback,
+                  Reconnect = true,
+                  ReconnectionDelay = TimeSpan.FromSeconds(10),
+                  Port = 2145
+              })
+              .WithParser<MessageParser>(new MessageParserSettings()
+              {
+                  EndDelimiter = new[] { (byte)(03), (byte)(13) },
+                  StartDelimiter = new[] { (byte)(02) }
+              })
+              .WithFormatter<string, AsciiFormatter>()
+              .Build();
+
+            client.WhenMessageReceived.Subscribe(message =>
+            {
+
+                Console.WriteLine($"Client < {message}");
+            });
+
+
+
+
+
+            Observable.Timer(TimeSpan.FromSeconds(10)).Subscribe((_) => Debugger.Break());
+
+            IDisposable subscription = client.WhenMessageReceived
+                 .Merge(client.WhenConnectionStatusChanged
+                     .Where(ot => ot.State == RxSockets.Models.State.Connected)
+                     .Select(ot => ot.State.ToString()))
+                 .Throttle(TimeSpan.FromSeconds(45))
+                 .Subscribe((_) => Debugger.Break());
+
+            client.Start();
+            Task.Factory.StartNew(async () =>
+            {
+                while (true)
+                {
+                    await client.SendAsync(DateTime.Now.ToString());
+                    await Task.Delay(1500);
+                }
+            });
             Console.WriteLine("Press :q + enter to stop");
 
-          
+
             bool quit = false;
             while (!quit)
             {
@@ -45,7 +92,7 @@ namespace BasicDemo
                     quit = true;
                     break;
                 }
-                socket.SendAsync(line);
+                client.SendAsync(line);
             }
 
             socket.Stop();

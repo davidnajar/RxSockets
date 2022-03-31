@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using RxSockets.Abstractions;
+using System;
 
 namespace RxSockets.Factory
 {
@@ -24,5 +25,7 @@ namespace RxSockets.Factory
       _collection.Add(new ServiceDescriptor(settings.GetType(),  settings));
       return  new CanSpecifyParser(_collection);
     }
-  }
+
+ 
+    }
 }

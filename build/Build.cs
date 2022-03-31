@@ -19,7 +19,7 @@ using Nuke.Common.CI.AppVeyor;
 
 [CheckBuildProjectConfigurations]
 [UnsetVisualStudioEnvironmentVariables]
-[AppVeyor(AppVeyorImage.VisualStudio2019, AutoGenerate =true)]
+[AppVeyor(AppVeyorImage.VisualStudioLatest, AutoGenerate =true)]
 class Build : NukeBuild
 {
     /// Support plugins are available for:

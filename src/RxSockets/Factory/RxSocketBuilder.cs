@@ -4,7 +4,7 @@ using RxSockets.Factory;
 
 namespace RxSockets
 {
-  public class RxSocketFactory
+  public class RxSocketBuilder
   {
     public static ICanSpecifySocketKind CreateSocket()
     {

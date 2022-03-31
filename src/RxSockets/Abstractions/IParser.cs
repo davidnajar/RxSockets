@@ -8,9 +8,9 @@ namespace RxSockets.Abstractions
   {
     bool CanParse(ReadOnlySequence<byte> bytes);
 
-    Task<ParseResult> ProcessAsync(ReadOnlySequence<byte> bytes);
+    ValueTask<ParseResult> ParseAsync(ReadOnlySequence<byte> bytes);
 
-    Task<ReadOnlySequence<byte>> PrepareMessageToBeSent(
+    ValueTask<ReadOnlySequence<byte>> PrepareMessageToBeSent(
       ReadOnlySequence<byte> bytes);
   }
 }

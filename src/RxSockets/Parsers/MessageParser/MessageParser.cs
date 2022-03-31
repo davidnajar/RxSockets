@@ -2,43 +2,42 @@
 using RxSockets.Models;
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 namespace RxSockets.Parsers.MessageParser
 {
-  public class MessageParser : IParser
-  {
-    private MessageParserSettings _settings;
-    public SequencePosition? start;
-    public SequencePosition? end;
-    private ISubject<ReadOnlySequence<byte>> _whenMessageParsed;
-
-    public MessageParser()
+    public class MessageParser : IParser
     {
-      _whenMessageParsed =  new Subject<ReadOnlySequence<byte>>();
-      _settings = new MessageParserSettings()
-      {
-        StartDelimiter = new byte[1]{ (byte) 2 },
-        EndDelimiter = new byte[1]{ (byte) 3 }
-      };
-    }
+        private MessageParserSettings _settings;
+        public SequencePosition? start;
+        public SequencePosition? end;
+        private ISubject<ReadOnlySequence<byte>> _whenMessageParsed;
 
-    public MessageParser(MessageParserSettings settings)
-      : this()
-    {
-      _settings = settings;
-    }
+        public MessageParser()
+        {
+            _whenMessageParsed = new Subject<ReadOnlySequence<byte>>();
+            _settings = new MessageParserSettings()
+            {
+                StartDelimiter = new byte[1] { (byte)2 },
+                EndDelimiter = new byte[1] { (byte)3 }
+            };
+        }
 
-    public IObservable<ReadOnlySequence<byte>> WhenMessageParsed
-    {
-      get
-      {
-        return _whenMessageParsed.AsObservable();
-      }
-    }
+        public MessageParser(MessageParserSettings settings)
+          : this()
+        {
+            _settings = settings;
+        }
+
+        public IObservable<ReadOnlySequence<byte>> WhenMessageParsed
+        {
+            get
+            {
+                return _whenMessageParsed.AsObservable();
+            }
+        }
 
         public bool CanParse(ReadOnlySequence<byte> buffer)
         {
@@ -62,7 +61,9 @@ namespace RxSockets.Parsers.MessageParser
                 }
             }
             else
-            { startFound = true; }
+            { 
+                startFound = true;
+            }
             if (_settings.EndDelimiter != null && _settings.EndDelimiter.Length > 0)
             {
                 end = buffer.PositionOf(_settings.EndDelimiter[0]);
@@ -86,24 +87,23 @@ namespace RxSockets.Parsers.MessageParser
             return startFound & endFound;
         }
 
-    public Task<ParseResult> ProcessAsync(ReadOnlySequence<byte> buffer)
-    {
-      ReadOnlySequence<byte> message = buffer.Slice(buffer.GetPosition(_settings.StartDelimiter.Length, start.Value), end.Value);
-      return Task.FromResult(new ParseResult()
-      {
-        CleanMessage = message,
-        EndPosition = end.Value
-      });
-    }
+        public ValueTask<ParseResult> ParseAsync(ReadOnlySequence<byte> buffer)
+        {
+            ReadOnlySequence<byte> message = buffer.Slice(buffer.GetPosition(_settings.StartDelimiter.Length, start.Value), end.Value);
+            return new ValueTask<ParseResult>(new ParseResult()
+            {
+                CleanMessage = message,
+                EndPosition = end.Value
+            });
+        }
 
-    public Task<ReadOnlySequence<byte>> PrepareMessageToBeSent(
-      ReadOnlySequence<byte> bytes)
-    {
-      List<byte> byteList = new List<byte>();
-      byteList.AddRange( _settings.StartDelimiter);
-      byteList.AddRange( bytes.ToArray());
-      byteList.AddRange(_settings.EndDelimiter);
-      return Task.FromResult(new ReadOnlySequence<byte>(byteList.ToArray()));
+        public ValueTask<ReadOnlySequence<byte>> PrepareMessageToBeSent(ReadOnlySequence<byte> bytes)
+        {
+            byte[] byteList = new byte[_settings.StartDelimiter.Length + _settings.EndDelimiter.Length + bytes.Length];
+            Buffer.BlockCopy(_settings.StartDelimiter, 0, byteList, 0, _settings.StartDelimiter.Length);
+            Buffer.BlockCopy(bytes.ToArray(), 0, byteList, _settings.StartDelimiter.Length, (int)bytes.Length);
+            Buffer.BlockCopy(_settings.EndDelimiter, 0, byteList, _settings.StartDelimiter.Length + (int)bytes.Length, _settings.EndDelimiter.Length);
+            return new ValueTask<ReadOnlySequence<byte>>(new ReadOnlySequence<byte>(byteList));
+        }
     }
-  }
 }
