@@ -7,7 +7,7 @@ increment: inherit
 commit-message-incrementing: Enabled
 branches:
   master:
-    regex: ^main
+    regex: ^master
     tag: ''
     increment: Patch
     prevent-increment-of-merged-branch-version: true
