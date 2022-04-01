@@ -1,0 +1,42 @@
+name: .NET
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, '#no-action') }}
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.9.7
+      with:
+        versionSpec: '5.x'
+    - name: Use GitVersion
+      # Step id is used as reference for the output values
+      id: gitversion 
+      uses: gittools/actions/gitversion/execute@v0.9.7
+    # Echo out the version, helps with quick debugging of the build without having to expand the prior step.
+    - run: |
+        echo "NuGetVersionV2: ${{ steps.gitversion.outputs.NuGetVersionV2 }}"
+    - name: Restore dependencies
+      run: dotnet restore src/RxSockets/RxSockets.csproj
+    - name: Build
+      run: dotnet build src/RxSockets/RxSockets.csproj --no-restore
+    - name: pack
+      run: dotnet pack src/RxSockets/RxSockets.csproj --no-restore --output packages/ --configuration Release -p:PackageVersion=${{ steps.gitversion.outputs.NuGetVersionV2 }}
+    - name: push
+      run: dotnet nuget push packages/**/*.nupkg -k ${{secrets.NUGET_API_KEY}}  --source https://api.nuget.org/v3/index.json
+    
