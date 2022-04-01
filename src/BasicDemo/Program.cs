@@ -14,27 +14,7 @@ namespace BasicDemo
     {
         static void Main(string[] args)
         {
-            var socket = RxSocketBuilder.CreateSocket()
-                .WithSocketType<TcpSocketServer>(new TcpSocketServerSettings()
-                {
-                    Ip = IPAddress.Any,
-                    MaxConnections = 1,
-                    Port = 2145
-                })
-                .WithParser<MessageParser>(new MessageParserSettings()
-                {
-                    EndDelimiter = new[] { (byte)(03), (byte)(13) },
-                    StartDelimiter = new[] { (byte)(02) }
-                })
-                .WithFormatter<string, AsciiFormatter>()
-                .Build();
 
-            socket.WhenMessageReceived.Subscribe(message =>
-            {
-
-                Console.WriteLine($"Server < {message}");
-            });
-            //  socket.Start();
 
             var client = RxSocketBuilder.CreateSocket()
               .WithSocketType<TcpSocketClient>(new TcpSocketClientSettings()
@@ -95,7 +75,7 @@ namespace BasicDemo
                 client.SendAsync(line);
             }
 
-            socket.Stop();
+            client.Stop();
         }
     }
 }

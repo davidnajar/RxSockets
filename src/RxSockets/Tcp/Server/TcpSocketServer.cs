@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace RxSockets
 {
-  public class TcpSocketServer : ISocket
+  internal class TcpSocketServer : ISocket
   {
     private List<IDuplexPipe> _connectedClients = new List<IDuplexPipe>();
     private Socket _internalSocket;
