@@ -17,5 +17,7 @@ namespace RxSockets.Abstractions
     void Start();
 
     void Stop();
+
+   void Restart();
   }
 }

@@ -25,7 +25,8 @@ namespace RxSockets.Tcp.Client
         private readonly IParser _parser;
         private CancellationTokenSource _cancellationTokenSource;
         private ISubject<ReadOnlySequence<byte>> _whenMessageParsed;
-
+        private ISubject<ConnectionStatus> _whenConnectionStatusChanged;
+        private bool _forceDisconnection = false;
         public IObservable<ReadOnlySequence<byte>> WhenMessageParsed
         {
             get
@@ -34,10 +35,18 @@ namespace RxSockets.Tcp.Client
             }
         }
 
+        public IObservable<ConnectionStatus> WhenConnectionStatusChanged
+        {
+            get
+            {
+                return _whenConnectionStatusChanged.AsObservable();
+            }
+        }
         private TcpSocketClient()
         {
             _cancellationTokenSource = new CancellationTokenSource();
             _whenMessageParsed = new Subject<ReadOnlySequence<byte>>();
+            _whenConnectionStatusChanged = new Subject<ConnectionStatus>();
         }
 
         public TcpSocketClient(TcpSocketClientSettings settings, IParser parser)
@@ -59,9 +68,10 @@ namespace RxSockets.Tcp.Client
             {
                 try
                 {
+                    _whenConnectionStatusChanged.OnNext(new ConnectionStatus() { State = State.Connecting });
                     await _internalSocket.ConnectAsync(_endpoint);
+                    _whenConnectionStatusChanged.OnNext(new ConnectionStatus() { State = State.Connected });
 
-                    
                     IDuplexPipe pipe = StreamConnection.GetDuplex(new NetworkStream(_internalSocket), (PipeOptions)null, (string)null);
                     _clientPipe = pipe;
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -70,6 +80,7 @@ namespace RxSockets.Tcp.Client
                     await CheckConnectionAsync(_internalSocket, cancellationToken);
                     _internalSocket.Shutdown(SocketShutdown.Both);
                     _internalSocket.Disconnect(true);
+                    _whenConnectionStatusChanged.OnNext(new ConnectionStatus() { State = State.Disconnected });
 
                 }
                 catch (SocketException sex)
@@ -101,6 +112,8 @@ namespace RxSockets.Tcp.Client
         {
             _cancellationTokenSource.Cancel();
             _internalSocket.Shutdown(SocketShutdown.Both);
+            _internalSocket.Dispose();
+            _internalSocket = null;
         }
 
         public Task StopAsync()
@@ -114,6 +127,11 @@ namespace RxSockets.Tcp.Client
             {
                 try
                 {
+                    if (_forceDisconnection)
+                    {
+                        _forceDisconnection = false;
+                        return;
+                    }
                     connected = !(socket.Poll(1, SelectMode.SelectRead) && socket.Available == 0);
                 }
                 catch (SocketException) { connected = false; }
@@ -230,5 +248,9 @@ namespace RxSockets.Tcp.Client
             }
         }
 
+        public void Restart()
+        {
+            _forceDisconnection = true;
+        }
     }
 }

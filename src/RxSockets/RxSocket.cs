@@ -18,14 +18,13 @@ namespace RxSockets
     private ISubject<TPayload> _whenMessageReceived;
     private ISubject<TPayload> _whenMessageSent;
     private TaskPoolScheduler _factoryScheduler;
-    private ISubject<ConnectionStatus> _whenConnectionStatusChanged;
 
     public RxSocket(ISocket socket, IParser parser, IMessageFormatter<TPayload> formatter)
     {
       _socket = socket;
       _parser = parser;
       _formatter = formatter;
-      _whenConnectionStatusChanged =  new Subject<ConnectionStatus>();
+      
       _socket.WhenMessageParsed.Subscribe(bytes => _formatter.FormatMessageAsync(bytes));
       _whenMessageReceived = new Subject<TPayload>();
       _whenMessageSent =  new Subject<TPayload>();
@@ -53,7 +52,7 @@ namespace RxSockets
     {
       get
       {
-        return _whenConnectionStatusChanged.AsObservable().ObserveOn(_factoryScheduler);
+        return _socket.WhenConnectionStatusChanged.ObserveOn(_factoryScheduler);
       }
     }
 
@@ -65,7 +64,12 @@ namespace RxSockets
       }
     }
 
-    public async Task SendAsync(TPayload payload)
+        public void Restart()
+        {
+            _socket.Restart();
+        }
+
+        public async Task SendAsync(TPayload payload)
     {
       ReadOnlySequence<byte> formattedMessage = await _formatter.GetBytesAsync(payload);
 

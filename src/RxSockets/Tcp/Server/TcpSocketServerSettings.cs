@@ -3,7 +3,7 @@ using System.Net;
 
 namespace RxSockets
 {
-  internal class TcpSocketServerSettings : ISocketSettings<TcpSocketServer>
+  public class TcpSocketServerSettings : ISocketSettings<TcpSocketServer>
   {
     public IPAddress Ip { get; set; }
 

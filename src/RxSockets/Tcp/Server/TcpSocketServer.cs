@@ -5,7 +5,6 @@ using RxSockets.Models;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.IO;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
@@ -16,50 +15,62 @@ using System.Threading.Tasks;
 
 namespace RxSockets
 {
-  internal class TcpSocketServer : ISocket
-  {
-    private List<IDuplexPipe> _connectedClients = new List<IDuplexPipe>();
-    private Socket _internalSocket;
-    private EndPoint _endpoint;
-    private TcpSocketServerSettings _settings;
-    private readonly IParser _parser;
-    private CancellationTokenSource _cancellationTokenSource;
-    private ISubject<ReadOnlySequence<byte>> _whenMessageParsed;
-
-    public IObservable<ReadOnlySequence<byte>> WhenMessageParsed
+    public class TcpSocketServer : ISocket
     {
-      get
-      {
-        return _whenMessageParsed.AsObservable();
-      }
-    }
+        private List<IDuplexPipe> _connectedClients = new List<IDuplexPipe>();
+        private Socket _internalSocket;
+        private EndPoint _endpoint;
+        private TcpSocketServerSettings _settings;
+        private readonly IParser _parser;
+        private CancellationTokenSource _cancellationTokenSource;
+        private ISubject<ReadOnlySequence<byte>> _whenMessageParsed;
 
-    private TcpSocketServer()
-    {
-      _cancellationTokenSource = new CancellationTokenSource();
-      _whenMessageParsed = new Subject<ReadOnlySequence<byte>>();
-    }
+        private ISubject<ConnectionStatus> _whenConnectionStatusChanged;
 
-    public TcpSocketServer(TcpSocketServerSettings settings, IParser parser)
-      : this()
-    {
-      _settings = settings;
-      _parser = parser;
-    }
+        public IObservable<ReadOnlySequence<byte>> WhenMessageParsed
+        {
+            get
+            {
+                return _whenMessageParsed.AsObservable();
+            }
+        }
 
-    public void Start()
-    {
-      BuildSocket();
-      _internalSocket.Bind(this._endpoint);
-      _internalSocket.Listen(this._settings.MaxConnections);
-      Task.Factory.StartNew(async () => await ConnectionHandler(_cancellationTokenSource.Token));
-    }
+        public IObservable<ConnectionStatus> WhenConnectionStatusChanged
+        {
+            get
+            {
+                return _whenConnectionStatusChanged.AsObservable();
+            }
+        }
+        private TcpSocketServer()
+        {
+            _cancellationTokenSource = new CancellationTokenSource();
+            _whenMessageParsed = new Subject<ReadOnlySequence<byte>>();
+            _whenConnectionStatusChanged = new Subject<ConnectionStatus>();
+        }
+
+        public TcpSocketServer(TcpSocketServerSettings settings, IParser parser)
+          : this()
+        {
+            _settings = settings;
+            _parser = parser;
+        }
+
+        public void Start()
+        {
+            BuildSocket();
+            _internalSocket.Bind(this._endpoint);
+            _internalSocket.Listen(this._settings.MaxConnections);
+            Task.Factory.StartNew(async () => await ConnectionHandler(_cancellationTokenSource.Token));
+        }
 
         private async Task ConnectionHandler(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                _whenConnectionStatusChanged.OnNext(new ConnectionStatus() { State = State.Listening });
                 Socket socket = await this._internalSocket.AcceptAsync();
+                _whenConnectionStatusChanged.OnNext(new ConnectionStatus() { State = State.Connected });
                 IDuplexPipe pipe = StreamConnection.GetDuplex(new NetworkStream(socket), (PipeOptions)null, (string)null);
                 _connectedClients.Add(pipe);
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -69,29 +80,29 @@ namespace RxSockets
             }
         }
 
-    public Task StartAsync()
-    {
-      return Task.Factory.StartNew(() => Start());
-    }
+        public Task StartAsync()
+        {
+            return Task.Factory.StartNew(() => Start());
+        }
 
-    public void Stop()
-    {
-      _cancellationTokenSource.Cancel();
-      _internalSocket.Shutdown(SocketShutdown.Both);
-    }
+        public void Stop()
+        {
+            _cancellationTokenSource.Cancel();
+            _internalSocket.Shutdown(SocketShutdown.Both);
+        }
 
-    public Task StopAsync()
-    {
-      return Task.Factory.StartNew(() => this.Stop());
-    }
+        public Task StopAsync()
+        {
+            return Task.Factory.StartNew(() => this.Stop());
+        }
 
-    private async Task ProcessLinesAsync(Socket socket, CancellationToken cancellationToken)
-    {
-      Pipe pipe = new Pipe();
-      Task writing = this.FillPipeAsync(socket, pipe.Writer, cancellationToken);
-      Task reading = this.ReadPipeAsync(pipe.Reader, cancellationToken);
-      await Task.WhenAll(reading, writing);
-    }
+        private async Task ProcessLinesAsync(Socket socket, CancellationToken cancellationToken)
+        {
+            Pipe pipe = new Pipe();
+            Task writing = this.FillPipeAsync(socket, pipe.Writer, cancellationToken);
+            Task reading = this.ReadPipeAsync(pipe.Reader, cancellationToken);
+            await Task.WhenAll(reading, writing);
+        }
 
         private async Task FillPipeAsync(Socket socket, PipeWriter writer, CancellationToken cancellationToken)
         {
@@ -115,7 +126,7 @@ namespace RxSockets
 
                     break;
                 }
-               var result = await writer.FlushAsync(cancellationToken);
+                var result = await writer.FlushAsync(cancellationToken);
 
 
                 if (result.IsCompleted)
@@ -170,8 +181,16 @@ namespace RxSockets
 
         public async Task SendMessageAsync(ReadOnlySequence<byte> message)
         {
-         
-            _connectedClients.ForEach(async p =>  await p.Output.WriteAsync(new ReadOnlyMemory<byte>(message.ToArray<byte>()), _cancellationTokenSource.Token));
+
+            _connectedClients.ForEach(async p => await p.Output.WriteAsync(new ReadOnlyMemory<byte>(message.ToArray<byte>()), _cancellationTokenSource.Token));
         }
-  }
+
+        public void Restart()
+        {
+            Stop();
+            _internalSocket.Dispose();
+            _internalSocket = null;
+            Start();
+        } 
+    }
 }

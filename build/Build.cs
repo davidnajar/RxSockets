@@ -29,9 +29,9 @@ class Build : NukeBuild
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
     public static int Main () => Execute<Build>(x => x.Script);
-
+    
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
-    readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+    readonly string Configuration = IsLocalBuild ? "Debug" : "Release";
 
     [Parameter("Nuget API Key")]
     readonly string NugetApiKey;
@@ -60,7 +60,7 @@ class Build : NukeBuild
         .DependsOn(Clean)
     .Executes(() =>
     {
-        Logger.Info($"Next version is {GitVersion.AssemblySemVer}");
+        Serilog.Log.Information($"Next version is {GitVersion.AssemblySemVer}");
      
     });
 
