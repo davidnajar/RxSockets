@@ -4,7 +4,7 @@ minor-version-bump-message: '\+semver:\s?(feature|minor)'
 patch-version-bump-message: '\+semver:\s?(fix|patch)'
 no-bump-message: '\+semver:\s?(none|skip)'
 increment: inherit
-nextversion: 0.3.0
+next-version: 0.3.0
 commit-message-incrementing: Enabled
 branches:
   master:
